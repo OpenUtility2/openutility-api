@@ -1,59 +1,131 @@
-# OpenUtility Bot — Vercel Backend
+# OpenUtility API
 
-Vercel-ready serverless API for the OpenUtility Bot website.
+> The backend API that powers the OpenUtility web dashboard and connects it with the OpenUtility Discord Bot.
 
-## Deploy
+OpenUtility API is a Vercel-ready serverless backend for authentication, guild management, server configuration, bot synchronization, and persistent dashboard data. It keeps sensitive Discord credentials and server-side logic away from the frontend.
 
-1. Upload this repository to GitHub.
-2. Import the repository into Vercel.
-3. Add these environment variables in Vercel:
-   - DISCORD_CLIENT_ID
-   - DISCORD_CLIENT_SECRET
-   - DISCORD_BOT_TOKEN
-   - DISCORD_REDIRECT_URI
-   - FRONTEND_URL
-   - SESSION_SECRET
-   - BOT_SYNC_SECRET
-   - UPSTASH_REDIS_REST_URL
-   - UPSTASH_REDIS_REST_TOKEN
-4. Redeploy after adding variables.
+## ✨ Features
 
-## Discord redirect
+- 🔐 **Discord OAuth2** — Secure user authentication through Discord.
+- 🏠 **Guild Management** — Retrieve accessible servers and their channels.
+- ⚙️ **Server Configuration** — Read and update dashboard settings per guild.
+- 🤖 **Bot Synchronization** — Keep bot configuration and the web dashboard synchronized.
+- 💾 **Upstash Redis** — Persistent production storage.
+- 🧪 **Development Fallback** — Optional process-local storage for development.
+- ☁️ **Vercel Ready** — Designed for serverless deployment.
 
-After Vercel gives you a domain, add this exact URL in Discord Developer Portal -> OAuth2 -> Redirects:
+## 🔌 API Routes
 
-`https://YOUR-PROJECT.vercel.app/api/auth/discord/callback`
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| `GET` | `/api/health` | API health check |
+| `GET` | `/api/auth/discord` | Start Discord OAuth2 login |
+| `GET` | `/api/auth/discord/callback` | Handle OAuth2 callback |
+| `POST` | `/api/auth/logout` | End the current session |
+| `GET` | `/api/me` | Get the authenticated user |
+| `GET` | `/api/guilds` | Get accessible Discord guilds |
+| `GET` | `/api/guilds/:guildId/channels` | Get guild channels |
+| `GET` | `/api/guilds/:guildId/config` | Get dashboard configuration |
+| `PUT` | `/api/guilds/:guildId/config` | Update dashboard configuration |
+| `GET` | `/api/bot/guild/:guildId/config` | Get bot-synced configuration |
+| `PUT` | `/api/bot/guild/:guildId/config` | Update bot-synced configuration |
 
-Do not put the Discord client secret, bot token, or bot sync secret in frontend code.
+## 🚀 Deployment
 
-## Endpoints
+### 1. Deploy to Vercel
 
-GET /api/health
-GET /api/auth/discord
-GET /api/auth/discord/callback
-POST /api/auth/logout
-GET /api/me
-GET /api/guilds
-GET /api/guilds/:guildId/channels
-GET /api/guilds/:guildId/config
-PUT /api/guilds/:guildId/config
-GET /api/bot/guild/:guildId/config
-PUT /api/bot/guild/:guildId/config
+Import this repository into Vercel and deploy it as a serverless project.
 
-## Bot synchronization
+### 2. Configure environment variables
 
-The bot-to-website configuration endpoint is protected by `BOT_SYNC_SECRET`. The OpenUtility Bot should send:
+```env
+DISCORD_CLIENT_ID=
+DISCORD_CLIENT_SECRET=
+DISCORD_BOT_TOKEN=
+DISCORD_REDIRECT_URI=
+FRONTEND_URL=
+SESSION_SECRET=
+BOT_SYNC_SECRET=
+UPSTASH_REDIS_REST_URL=
+UPSTASH_REDIS_REST_TOKEN=
+```
 
-`Authorization: Bearer <BOT_SYNC_SECRET>`
+Redeploy after adding or changing environment variables.
 
-to:
+### 3. Configure Discord OAuth2
 
-`https://YOUR-PROJECT.vercel.app/api/bot/guild/:guildId/config`
+Add this callback URL to the Discord Developer Portal:
 
-The bot can `PUT` its current guild snapshot and can `GET` the website's current configuration. The endpoint stores configuration in the same Upstash-backed database used by the website API.
+```text
+https://YOUR-PROJECT.vercel.app/api/auth/discord/callback
+```
 
-For the Phase 3 bot, set `WEBSITE_SYNC_URL` to the Vercel project base URL and set the bot's `WEBSITE_SYNC_SECRET` to the exact same value as Vercel's `BOT_SYNC_SECRET`.
+`DISCORD_REDIRECT_URI` must match the configured Discord redirect URI.
 
-## Storage
+> ⚠️ Never expose `DISCORD_CLIENT_SECRET`, `DISCORD_BOT_TOKEN`, `SESSION_SECRET`, or `BOT_SYNC_SECRET` in frontend code or public repositories.
 
-The API uses Upstash Redis when `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` are configured. Without them, a process-local memory fallback is used for development only and is not durable across Vercel invocations.
+## 🤖 Bot Synchronization
+
+The OpenUtility Bot can synchronize guild configuration with this API using `BOT_SYNC_SECRET`.
+
+```http
+Authorization: Bearer <BOT_SYNC_SECRET>
+```
+
+Use the bot configuration endpoint:
+
+```text
+https://YOUR-PROJECT.vercel.app/api/bot/guild/:guildId/config
+```
+
+For the bot, configure:
+
+```env
+WEBSITE_SYNC_URL=https://YOUR-PROJECT.vercel.app
+WEBSITE_SYNC_SECRET=<same value as BOT_SYNC_SECRET>
+```
+
+The bot can `GET` the website's current configuration and `PUT` its current guild snapshot/configuration.
+
+## 💾 Storage
+
+Production deployments use Upstash Redis when configured:
+
+```env
+UPSTASH_REDIS_REST_URL=
+UPSTASH_REDIS_REST_TOKEN=
+```
+
+Without Redis, the API may use process-local memory for development. This fallback is **not durable** and should not be used for production data.
+
+## 🔒 Security
+
+- Store secrets only in environment variables.
+- Use strong, randomly generated session and sync secrets.
+- Never commit `.env` files or credentials.
+- Keep OAuth redirect URLs restricted to trusted application URLs.
+- Use HTTPS in production.
+
+## 🛠️ Local Development
+
+```bash
+git clone https://github.com/OpenUtility2/openutility-api.git
+cd openutility-api
+npm install
+```
+
+Create your local environment configuration, add the required variables, and start the project using the development command defined by the repository.
+
+## 🧩 OpenUtility Ecosystem
+
+OpenUtility API is part of the wider OpenUtility project:
+
+- **OpenUtility Bot** — Discord server management, moderation, utilities, logging, and configuration.
+- **OpenUtility Dashboard** — Web-based server management interface.
+- **OpenUtility API** — Authentication, configuration, storage, and bot synchronization backend.
+
+## 📄 License
+
+See the repository for the applicable license.
+
+Built with ❤️ for **OpenUtility**.
