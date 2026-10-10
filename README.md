@@ -35,7 +35,8 @@ OpenUtility API is a Vercel-ready serverless backend for authentication, guild m
 | `POST` | `/api/guilds/:guildId/audit` | Record an allowlisted dashboard change event |
 | `GET/PUT` | `/api/guilds/:guildId/bot-profile` | Read or update the bot profile |
 | `GET` | `/api/guilds/:guildId/logging` | Read logging configuration |
-| `GET` | `/api/guilds/:guildId/embeds` | List saved embeds |\n| `POST` | `/api/guilds/:guildId/embeds` | Save an embed or send it to a channel |
+| `GET` | `/api/guilds/:guildId/embeds` | List saved embeds |
+| `POST` | `/api/guilds/:guildId/embeds` | Save an embed or send it to a channel |
 | `GET` | `/api/bot/guild/:guildId/config` | Get bot-synced configuration |
 | `PUT` | `/api/bot/guild/:guildId/config` | Update bot-synced configuration |
 
