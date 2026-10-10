@@ -129,3 +129,19 @@ OpenUtility API is part of the wider OpenUtility project:
 See the repository for the applicable license.
 
 Built with ❤️ for **OpenUtility**.
+
+
+## Production configuration and security checks
+
+Configure these variables in the deployment provider (never commit real values):
+
+- `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET`, and `DISCORD_BOT_TOKEN`
+- `DISCORD_REDIRECT_URI` — exact OAuth callback URL registered in Discord
+- `FRONTEND_URL=https://openutility.bot.nu` — exact dashboard origin, with no path
+- `SESSION_SECRET` — a long, randomly generated secret
+- `BOT_SYNC_SECRET` — a separate long, randomly generated secret shared with the bot
+- `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` — persistent storage
+
+Production requests fail closed when persistent Redis is missing. The health endpoint checks storage reachability. Browser state-changing requests must include the session-bound `X-CSRF-Token` returned by `GET /api/csrf` and must originate from the configured frontend origin. Keep the frontend and API on HTTPS.
+
+The per-server bot profile endpoint is `GET/PUT /api/guilds/:guildId/bot-profile`. Moderation endpoints verify Discord permissions and role hierarchy, and embed sending validates the destination channel.
