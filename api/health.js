@@ -30,9 +30,9 @@ module.exports = async (req, res) => {
   }
 
   if (route === "logout") {
-    if (req.method !== "POST" && req.method !== "GET") {
-      return res.status(405).json({ error: "Method not allowed" });
-    }
+    if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
+    const session = requireAuth(req, res);
+    if (!session) return;
     clearSession(req, res);
     return res.json({ ok: true });
   }
