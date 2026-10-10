@@ -1,4 +1,4 @@
-const {cors,requireAuth,requireGuildAccess,dbGet,dbSet,mergeConfig,configKey,validGuildId}=require("../../_lib");
+const {cors,requireAuth,requireGuildAccess,dbGet,dbSet,mergeConfig,configKey,automodKey,validGuildId}=require("../../_lib");
 module.exports=async(req,res)=>{
   cors(res); if(req.method==="OPTIONS")return res.status(204).end();
   const s=requireAuth(req,res); if(!s)return;
@@ -15,6 +15,6 @@ module.exports=async(req,res)=>{
     if(typeof next.prefix!=="string"||next.prefix.length<1||next.prefix.length>5)return res.status(400).json({error:"Prefix must be 1-5 characters."});
     if(!Array.isArray(next.automod.blockedWords))return res.status(400).json({error:"Blocked words must be an array."});
     next.automod.blockedWords=next.automod.blockedWords.map(String).map(x=>x.trim()).filter(Boolean).slice(0,100);
-    await dbSet(key,next); return res.json({ok:true,guildId:id,config:next});
+    await Promise.all([dbSet(key,next),dbSet(automodKey(id),next.automod)]); return res.json({ok:true,guildId:id,config:next,automod:next.automod,source:"dashboard"});
   }catch(e){console.error(e);return res.status(503).json({error:"Configuration storage is unavailable."});}
 };
