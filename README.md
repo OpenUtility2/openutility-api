@@ -9,6 +9,7 @@ OpenUtility API is a Vercel-ready serverless backend for authentication, guild m
 - 🔐 **Discord OAuth2** — Secure user authentication through Discord.
 - 🏠 **Guild Management** — Retrieve accessible servers and their channels.
 - ⚙️ **Server Configuration** — Read and update dashboard settings per guild.
+- 🛡️ **Moderation and history** — Permission-checked moderation actions, case history, and per-server dashboard change history.
 - 🤖 **Bot Synchronization** — Keep bot configuration and the web dashboard synchronized.
 - 💾 **Upstash Redis** — Persistent production storage.
 - 🧪 **Development Fallback** — Optional process-local storage for development.
@@ -19,6 +20,7 @@ OpenUtility API is a Vercel-ready serverless backend for authentication, guild m
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
 | `GET` | `/api/health` | API health check |
+| `GET` | `/api/csrf` | Get the session-bound CSRF token |
 | `GET` | `/api/auth/discord` | Start Discord OAuth2 login |
 | `GET` | `/api/auth/discord/callback` | Handle OAuth2 callback |
 | `POST` | `/api/auth/logout` | End the current session |
@@ -27,8 +29,17 @@ OpenUtility API is a Vercel-ready serverless backend for authentication, guild m
 | `GET` | `/api/guilds/:guildId/channels` | Get guild channels |
 | `GET` | `/api/guilds/:guildId/config` | Get dashboard configuration |
 | `PUT` | `/api/guilds/:guildId/config` | Update dashboard configuration |
+| `GET` | `/api/guilds/:guildId/moderation` | List recent moderation cases |
+| `POST` | `/api/guilds/:guildId/moderation` | Execute an authorized moderation action |
+| `GET` | `/api/guilds/:guildId/audit` | Get per-server dashboard change history |
+| `POST` | `/api/guilds/:guildId/audit` | Record an allowlisted dashboard change event |
+| `GET/PUT` | `/api/guilds/:guildId/bot-profile` | Read or update the bot profile |
+| `GET` | `/api/guilds/:guildId/logging` | Read logging configuration |
+| `GET/PUT` | `/api/guilds/:guildId/embeds` | Read or manage saved embeds |
 | `GET` | `/api/bot/guild/:guildId/config` | Get bot-synced configuration |
 | `PUT` | `/api/bot/guild/:guildId/config` | Update bot-synced configuration |
+
+Guild-scoped dashboard routes require an authenticated session and permission to manage the requested Discord server. State-changing browser requests require the session-bound CSRF token and configured frontend origin. Bot-sync routes use the separate bot synchronization secret.
 
 ## 🚀 Deployment
 
@@ -96,15 +107,17 @@ UPSTASH_REDIS_REST_URL=
 UPSTASH_REDIS_REST_TOKEN=
 ```
 
-Without Redis, the API may use process-local memory for development. This fallback is **not durable** and should not be used for production data.
+Without Redis, the API may use process-local memory for development. This fallback is **not durable** and should not be used for production data. Production deployments fail closed when persistent Redis is missing.
 
 ## 🔒 Security
 
 - Store secrets only in environment variables.
-- Use strong, randomly generated session and sync secrets.
+- Use strong, randomly generated session and sync secrets; keep them separate.
 - Never commit `.env` files or credentials.
 - Keep OAuth redirect URLs restricted to trusted application URLs.
 - Use HTTPS in production.
+- Keep the dashboard and API on HTTPS.
+- Moderation routes verify Discord permissions and role hierarchy; embed sending validates the destination channel.
 
 ## 🛠️ Local Development
 
@@ -112,9 +125,10 @@ Without Redis, the API may use process-local memory for development. This fallba
 git clone https://github.com/OpenUtility2/openutility-api.git
 cd openutility-api
 npm install
+npm run check
 ```
 
-Create your local environment configuration, add the required variables, and start the project using the development command defined by the repository.
+Create your local environment configuration, add the required variables, and run the project's configured development command.
 
 ## 🧩 OpenUtility Ecosystem
 
@@ -130,8 +144,7 @@ See the repository for the applicable license.
 
 Built with ❤️ for **OpenUtility**.
 
-
-## Production configuration and security checks
+## Production configuration
 
 Configure these variables in the deployment provider (never commit real values):
 
@@ -142,6 +155,4 @@ Configure these variables in the deployment provider (never commit real values):
 - `BOT_SYNC_SECRET` — a separate long, randomly generated secret shared with the bot
 - `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` — persistent storage
 
-Production requests fail closed when persistent Redis is missing. The health endpoint checks storage reachability. Browser state-changing requests must include the session-bound `X-CSRF-Token` returned by `GET /api/csrf` and must originate from the configured frontend origin. Keep the frontend and API on HTTPS.
-
-The per-server bot profile endpoint is `GET/PUT /api/guilds/:guildId/bot-profile`. Moderation endpoints verify Discord permissions and role hierarchy, and embed sending validates the destination channel.
+The health endpoint checks storage reachability. Browser state-changing requests must include the session-bound `X-CSRF-Token` returned by `GET /api/csrf` and must originate from the configured frontend origin.
