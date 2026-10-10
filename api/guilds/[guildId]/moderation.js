@@ -34,14 +34,12 @@ module.exports=async(req,res)=>{
     const needed=BigInt(ACTION_PERMISSIONS[action]);
     if(!actorIsOwner&&(actorPerms&8n)!==8n&&(actorPerms&needed)!==needed)return res.status(403).json({error:"You do not have the Discord permission required for this action."});
     if(!actorIsOwner&&action!=="unban"&&highest(actor)<=highest(target))return res.status(403).json({error:"Your highest role must be above the target member's highest role."});
-    if(action!=="unban"){
-      const botMember=await discordJson(`/guilds/${id}/members/${bot.id}`,token);
-      if(highest(botMember)<=highest(target))return res.status(403).json({error:"The bot's highest role must be above the target member's highest role."});
-      const everyoneRole=roleMap.get(id);
-      let botPerms=everyoneRole?.permissions||0n;
-      for(const roleId of botMember.roles||[])botPerms|=roleMap.get(roleId)?.permissions||0n;
-      if((botPerms&needed)!==needed)return res.status(403).json({error:"The bot is missing the Discord permission required for this action."});
-    }
+    const botMember=await discordJson(`/guilds/${id}/members/${bot.id}`,token);
+    if(action!=="unban"&&highest(botMember)<=highest(target))return res.status(403).json({error:"The bot's highest role must be above the target member's highest role."});
+    const everyoneRole=roleMap.get(id);
+    let botPerms=everyoneRole?.permissions||0n;
+    for(const roleId of botMember.roles||[])botPerms|=roleMap.get(roleId)?.permissions||0n;
+    if((botPerms&needed)!==needed)return res.status(403).json({error:"The bot is missing the Discord permission required for this action."});
     const reasonText=String(reason||"OpenUtility Dashboard").slice(0,512);
     const headers={Authorization:`Bot ${token}`,"Content-Type":"application/json","X-Audit-Log-Reason":encodeURIComponent(reasonText)};
     const base=`https://discord.com/api/v10/guilds/${id}`;
