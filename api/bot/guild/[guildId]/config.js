@@ -1,4 +1,4 @@
-const {requireBotSyncAuth,dbGet,dbSet,mergeConfig,configKey,automodKey,validGuildId}=require("../../../_lib");
+const {requireBotSyncAuth,dbGet,dbSetConfigAndAutomod,mergeConfig,configKey,automodKey,validGuildId}=require("../../../_lib");
 
 function bodyObject(req){
   const body=req.body;
@@ -35,7 +35,7 @@ module.exports=async(req,res)=>{
     const incomingAutomod=Object.prototype.hasOwnProperty.call(body,"automod")?cleanAutomod(body.automod):cleanAutomod(next.automod);
     next.automod=cleanAutomod({...next.automod,...incomingAutomod});
 
-    await Promise.all([dbSet(configKey(id),next),dbSet(automodKey(id),next.automod)]);
+    await dbSetConfigAndAutomod(id,next,next.automod);
     return res.json({ok:true,guildId:id,config:next,automod:next.automod,source:"bot"});
   }catch(error){
     console.error("Bot sync error:",error);
