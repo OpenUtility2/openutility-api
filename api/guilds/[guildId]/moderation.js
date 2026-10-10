@@ -1,4 +1,4 @@
-const {cors,requireAuth,requireGuildAccess,discordFetch,validGuildId}=require("../../_lib");
+const {cors,requireAuth,requireGuildAccess,discordFetch,dbGet,dbSet,validGuildId}=require("../../_lib");
 
 const ACTION_PERMISSIONS={ban:4,kick:2,timeout:1099511627776,untimeout:1099511627776,unban:4};
 async function discordJson(path,token){
@@ -11,7 +11,12 @@ module.exports=async(req,res)=>{
   if(!validGuildId(id))return res.status(400).json({error:"Invalid guild ID."});
   let actorGuild;
   try{actorGuild=await requireGuildAccess(session,id);}catch(e){return res.status(e.status||502).json({error:e.status===403?e.message:"Unable to verify server permissions."});}
-  if(req.method!=="POST")return res.status(405).json({error:"Method not allowed"});
+  if(!["GET","POST"].includes(req.method))return res.status(405).json({error:"Method not allowed"});
+  const casesKey=`guild:${id}:moderation-cases`;
+  if(req.method==="GET"){
+    try{const stored=await dbGet(casesKey);return res.json({guildId:id,cases:Array.isArray(stored)?stored.slice(0,25):[]});}
+    catch(error){console.error("Moderation case history unavailable:",error);return res.status(503).json({error:"Moderation case history is unavailable."});}
+  }
   const token=process.env.DISCORD_BOT_TOKEN;
   if(!token)return res.status(503).json({error:"Bot token is not configured."});
   const {action,userId,reason,minutes}=req.body||{};
@@ -49,6 +54,14 @@ module.exports=async(req,res)=>{
     else if(action==="kick")await discordFetch(`${base}/members/${userId}`,{method:"DELETE",headers});
     else if(action==="timeout"){const m=Math.max(1,Math.min(40320,Number(minutes)||10));const until=new Date(Date.now()+m*60000).toISOString();await discordFetch(`${base}/members/${userId}`,{method:"PATCH",headers,body:JSON.stringify({communication_disabled_until:until})});result.minutes=m;}
     else if(action==="untimeout")await discordFetch(`${base}/members/${userId}`,{method:"PATCH",headers,body:JSON.stringify({communication_disabled_until:null})});
+    try{
+      const existing=await dbGet(casesKey);
+      const cases=Array.isArray(existing)?existing:[];
+      const actor=session.user||{};
+      const entry={id:`${Date.now()}-${Math.random().toString(36).slice(2,8)}`,action,userId:String(userId),moderatorId:String(actor.id||""),moderatorName:String(actor.global_name||actor.username||"Moderator").slice(0,100),reason:reasonText,minutes:result.minutes||null,createdAt:new Date().toISOString()};
+      await dbSet(casesKey,[entry,...cases].slice(0,100));
+      result.caseLogged=true;
+    }catch(logError){console.error("Moderation succeeded but case history could not be stored:",logError);result.caseLogged=false;}
     return res.json(result);
   }catch(e){return res.status(e.status||502).json({error:e.message||"Discord moderation action failed."});}
 };
