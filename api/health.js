@@ -1,17 +1,19 @@
-const { cors, requireAuth, getSession, clearSession } = require("./_lib");
+const { cors, requireAuth, getSession, clearSession, dbGet } = require("./_lib");
 
-module.exports = (req, res) => {
+module.exports = async (req, res) => {
   cors(res);
   if (req.method === "OPTIONS") return res.status(204).end();
 
   const route = String((req.query && req.query.route) || "health").toLowerCase();
 
   if (route === "health") {
-    return res.status(200).json({
-      status: "ok",
-      name: "OpenUtility Bot API",
-      time: new Date().toISOString()
-    });
+    try {
+      if (process.env.VERCEL || process.env.NODE_ENV === "production") await dbGet("openutility:health:probe");
+      return res.status(200).json({ status: "ok", storage: "reachable", name: "OpenUtility Bot API", time: new Date().toISOString() });
+    } catch (error) {
+      console.error("API health check failed:", error.message);
+      return res.status(503).json({ status: "degraded", storage: "unavailable", name: "OpenUtility Bot API", time: new Date().toISOString() });
+    }
   }
 
   if (route === "me") {
@@ -28,9 +30,9 @@ module.exports = (req, res) => {
   }
 
   if (route === "logout") {
-    if (req.method !== "POST" && req.method !== "GET") {
-      return res.status(405).json({ error: "Method not allowed" });
-    }
+    if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
+    const session = requireAuth(req, res);
+    if (!session) return;
     clearSession(req, res);
     return res.json({ ok: true });
   }
