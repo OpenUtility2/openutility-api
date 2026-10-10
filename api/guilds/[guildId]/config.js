@@ -4,7 +4,6 @@ const isObject=value=>!!value&&typeof value==="object"&&!Array.isArray(value);
 const isSnowflake=value=>value===null||/^\d{17,20}$/.test(String(value||""));
 const own=(object,key)=>Object.prototype.hasOwnProperty.call(object,key);
 function validateSection(section,fields,types,label){
-  if(!own(section,"")){}
   for(const [key,value] of Object.entries(section)){
     if(!Object.prototype.hasOwnProperty.call(fields,key))return `Unsupported ${label} setting: ${key}.`;
     const type=types[key];
