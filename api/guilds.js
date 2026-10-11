@@ -1,4 +1,4 @@
-const {cors,requireAuth,discordFetch,manageable}=require("./_lib");
+const {cors,requireAuth,discordFetch,manageable}=require("../lib/_lib");
 
 module.exports=async(req,res)=>{
   cors(res);
