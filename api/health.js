@@ -1,4 +1,4 @@
-const { cors, requireAuth, getSession, clearSession, dbGet } = require("./_lib");
+const { cors, requireAuth, getSession, clearSession, dbGet } = require("../lib/_lib");
 
 module.exports = async (req, res) => {
   cors(res);
