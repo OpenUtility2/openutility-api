@@ -1,4 +1,4 @@
-const {cors,requireAuth,requireGuildAccess,dbGet,dbSet,validGuildId}=require("../../_lib");
+const {cors,requireAuth,requireGuildAccess,dbGet,dbSet,validGuildId}=require("../../../lib/_lib");
 
 function cleanUrl(value){
   if(value===null||value==="")return null;
