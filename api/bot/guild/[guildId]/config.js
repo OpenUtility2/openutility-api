@@ -1,4 +1,4 @@
-const {requireBotSyncAuth,dbGet,dbSet,mergeConfig,configKey,automodKey,validGuildId}=require("../../../_lib");
+const {requireBotSyncAuth,dbGet,dbSet,mergeConfig,configKey,automodKey,validGuildId}=require("../../../../lib/_lib");
 
 function bodyObject(req){
   const body=req.body;
