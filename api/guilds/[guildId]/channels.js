@@ -1,4 +1,4 @@
-const {cors,requireAuth,requireGuildAccess,discordFetch}=require("../../_lib");
+const {cors,requireAuth,requireGuildAccess,discordFetch}=require("../../../lib/_lib");
 module.exports=async(req,res)=>{
   cors(res);if(req.method==="OPTIONS")return res.status(204).end();
   const s=requireAuth(req,res);if(!s)return;
