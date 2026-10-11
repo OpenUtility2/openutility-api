@@ -1,4 +1,4 @@
-const {cors,requireAuth,requireGuildAccess,dbGet,dbSet,loggingKey,mergeConfig,configKey,validGuildId}=require("../../_lib");
+const {cors,requireAuth,requireGuildAccess,dbGet,dbSet,loggingKey,mergeConfig,configKey,validGuildId}=require("../../../lib/_lib");
 
 async function syncRuntimeConfig(guildId, config){
   const base=String(process.env.BOT_API_URL||"").trim().replace(/\/$/,"");
