@@ -1,4 +1,4 @@
-const {cors,requireAuth,requireGuildAccess,dbGet,dbSet,validGuildId}=require("../../_lib");
+const {cors,requireAuth,requireGuildAccess,dbGet,dbSet,validGuildId}=require("../../../lib/_lib");
 
 const ALLOWED_SECTIONS=new Set(["configuration","automod","logging","welcome"]);
 module.exports=async(req,res)=>{
