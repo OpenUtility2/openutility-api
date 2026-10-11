@@ -1,4 +1,4 @@
-const {cors,requireAuth,requireGuildAccess,discordFetch,dbGet,dbSet,embedKey,validGuildId}=require("../../_lib");
+const {cors,requireAuth,requireGuildAccess,discordFetch,dbGet,dbSet,embedKey,validGuildId}=require("../../../lib/_lib");
 function safeHttpsUrl(value){if(!value)return null;try{const u=new URL(String(value));return u.protocol==="https:"?u.toString().slice(0,2048):null}catch{return null}}
 function cleanEmbed(input={}){
   const e={};
