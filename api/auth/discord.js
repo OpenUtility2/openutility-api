@@ -1,5 +1,5 @@
 const crypto = require("crypto");
-const { cors } = require("../_lib");
+const { cors } = require("../../lib/_lib");
 
 module.exports = (req, res) => {
   cors(res);
