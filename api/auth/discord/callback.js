@@ -2,7 +2,7 @@ const {
   cors,
   discordFetch,
   setSession
-} = require("../../_lib");
+} = require("../../../lib/_lib");
 
 function parseCookies(req) {
   const raw = req.headers.cookie || "";
