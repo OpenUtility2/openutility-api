@@ -58,6 +58,7 @@ DISCORD_REDIRECT_URI=
 FRONTEND_URL=
 SESSION_SECRET=
 BOT_SYNC_SECRET=
+BOT_API_URL=
 UPSTASH_REDIS_REST_URL=
 UPSTASH_REDIS_REST_TOKEN=
 ```
@@ -78,7 +79,9 @@ https://YOUR-PROJECT.vercel.app/api/auth/discord/callback
 
 ## 🤖 Bot Synchronization
 
-The OpenUtility Bot can synchronize guild configuration with this API using `BOT_SYNC_SECRET`.
+The OpenUtility Bot synchronizes guild configuration with this API using `BOT_SYNC_SECRET`. Dashboard writes to configuration and logging are forwarded to the running bot when `BOT_API_URL` is configured. The API reports `runtimeSync.status: "synced"` only after the bot endpoint acknowledges the update; otherwise the dashboard warns that settings are stored but not yet applied.
+
+Configure `BOT_API_URL` as the public HTTPS base URL of the bot host that serves `/api/bot/guild/:guildId/config` (not the Vercel API URL). Configure the same random `BOT_SYNC_SECRET` on both the API deployment and bot host. The bot host must expose its HTTP API port publicly over HTTPS.
 
 ```http
 Authorization: Bearer <BOT_SYNC_SECRET>
@@ -90,14 +93,16 @@ Use the bot configuration endpoint:
 https://YOUR-PROJECT.vercel.app/api/bot/guild/:guildId/config
 ```
 
-For the bot, configure:
+For the bot host, configure:
 
 ```env
+BOT_SYNC_SECRET=<same value as API BOT_SYNC_SECRET>
 WEBSITE_SYNC_URL=https://YOUR-PROJECT.vercel.app
 WEBSITE_SYNC_SECRET=<same value as BOT_SYNC_SECRET>
+PORT=3000
 ```
 
-The bot can `GET` the website's current configuration and `PUT` its current guild snapshot/configuration.
+`WEBSITE_SYNC_URL` is the API deployment base URL used by the bot for outbound synchronization. `BOT_API_URL` is the separate public base URL of the bot's own HTTP service, used by the API to push dashboard changes into the running bot.
 
 ## 💾 Storage
 
@@ -153,7 +158,8 @@ Configure these variables in the deployment provider (never commit real values):
 - `DISCORD_REDIRECT_URI` — exact OAuth callback URL registered in Discord
 - `FRONTEND_URL=https://openutility.bot.nu` — exact dashboard origin, with no path
 - `SESSION_SECRET` — a long, randomly generated secret
-- `BOT_SYNC_SECRET` — a separate long, randomly generated secret shared with the bot
+- `BOT_SYNC_SECRET` — a long, randomly generated secret shared with the bot
+- `BOT_API_URL` — public HTTPS base URL for the bot host's configuration-sync endpoint
 - `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` — persistent storage
 
 The health endpoint checks storage reachability. Browser state-changing requests must include the session-bound `X-CSRF-Token` returned by `GET /api/csrf` and must originate from the configured frontend origin.
