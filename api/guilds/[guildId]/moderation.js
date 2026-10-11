@@ -1,4 +1,4 @@
-const {cors,requireAuth,requireGuildAccess,discordFetch,dbGet,dbSet,validGuildId}=require("../../_lib");
+const {cors,requireAuth,requireGuildAccess,discordFetch,dbGet,dbSet,validGuildId}=require("../../../lib/_lib");
 
 const ACTION_PERMISSIONS={ban:4,kick:2,timeout:1099511627776,untimeout:1099511627776,unban:4};
 async function discordJson(path,token){
