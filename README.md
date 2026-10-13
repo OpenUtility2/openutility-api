@@ -28,6 +28,7 @@ OpenUtility API is a Vercel-ready serverless backend for authentication, guild m
 | `GET` | `/api/guilds` | Get accessible Discord guilds |
 | `GET` | `/api/guilds/:guildId/channels` | Get guild channels |
 | `GET` | `/api/guilds/:guildId/config` | Get dashboard configuration |
+| `GET` | `/api/guilds/:guildId/diagnostics` | Check persistent storage and the bot’s last applied configuration version |
 | `PUT` | `/api/guilds/:guildId/config` | Update dashboard configuration |
 | `GET` | `/api/guilds/:guildId/moderation` | List recent moderation cases |
 | `POST` | `/api/guilds/:guildId/moderation` | Execute an authorized moderation action |
@@ -38,6 +39,7 @@ OpenUtility API is a Vercel-ready serverless backend for authentication, guild m
 | `GET` | `/api/guilds/:guildId/embeds` | List saved embeds |
 | `POST` | `/api/guilds/:guildId/embeds` | Save an embed or send it to a channel |
 | `GET` | `/api/bot/guild/:guildId/config` | Get bot-synced configuration |
+| `POST` | `/api/bot/guild/:guildId/config` | Record an authenticated bot configuration-apply acknowledgement |
 | `PUT` | `/api/bot/guild/:guildId/config` | Update bot-synced configuration |
 
 Guild-scoped dashboard routes require an authenticated session and permission to manage the requested Discord server. State-changing browser requests require the session-bound CSRF token and configured frontend origin. Bot-sync routes use the separate bot synchronization secret.
@@ -160,3 +162,8 @@ Configure these variables in the deployment provider (never commit real values):
 - `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` — persistent storage
 
 The health endpoint checks storage reachability. Browser state-changing requests must include the session-bound `X-CSRF-Token` returned by `GET /api/csrf` and must originate from the configured frontend origin.
+
+
+## Bot apply acknowledgements and recovery
+
+The bot should POST an authenticated acknowledgement to `/api/bot/guild/:guildId/config` after it has validated and applied the current configuration locally. The API stores the acknowledgement in Redis. The dashboard diagnostics endpoint compares the acknowledged `configUpdatedAt` value with the currently saved configuration version and reports `applied`, `pending`, `stale`, or `not_seen`. An acknowledgement confirms the bot's local configuration application; it does not guarantee Discord channel permissions, role hierarchy, or every external action succeeds.
