@@ -77,32 +77,29 @@ https://YOUR-PROJECT.vercel.app/api/auth/discord/callback
 
 > ⚠️ Never expose `DISCORD_CLIENT_SECRET`, `DISCORD_BOT_TOKEN`, `SESSION_SECRET`, or `BOT_SYNC_SECRET` in frontend code or public repositories.
 
-## 🤖 Bot Synchronization
+## 🤖 Bot Synchronization (Outbound Polling)
 
-The OpenUtility Bot synchronizes guild configuration with this API using `BOT_SYNC_SECRET`. Dashboard writes to configuration and logging are forwarded to the running bot when `BOT_API_URL` is configured. The API reports `runtimeSync.status: "synced"` only after the bot endpoint acknowledges the update; otherwise the dashboard warns that settings are stored but not yet applied.
+The bot pulls the latest guild configuration from this API every 60 seconds. This design works on game-hosting panels that allow outbound HTTPS but do not provide a public HTTPS endpoint for the bot. No `BOT_API_URL`, custom domain, or inbound bot API port is required.
 
-Configure `BOT_API_URL` as the public HTTPS base URL of the bot host that serves `/api/bot/guild/:guildId/config` (not the Vercel API URL). Configure the same random `BOT_SYNC_SECRET` on both the API deployment and bot host. The bot host must expose its HTTP API port publicly over HTTPS.
+Dashboard configuration and logging writes are saved to persistent storage and return `runtimeSync.status: "queued"`. That confirms the API stored the settings; it does **not** claim every Discord feature has applied them. The bot fetches `/api/bot/guild/:guildId/config` using the shared sync secret and emits a `guildConfigUpdate` event when a guild's configuration changes. Feature handlers must subscribe to that event or read the bot's `client.guildConfigs` cache to apply supported settings.
 
-```http
-Authorization: Bearer <BOT_SYNC_SECRET>
-```
-
-Use the bot configuration endpoint:
-
-```text
-https://YOUR-PROJECT.vercel.app/api/bot/guild/:guildId/config
-```
-
-For the bot host, configure:
+Configure the API deployment:
 
 ```env
-BOT_SYNC_SECRET=<same value as API BOT_SYNC_SECRET>
-WEBSITE_SYNC_URL=https://YOUR-PROJECT.vercel.app
-WEBSITE_SYNC_SECRET=<same value as BOT_SYNC_SECRET>
-PORT=3000
+BOT_SYNC_SECRET=<long random secret>
+UPSTASH_REDIS_REST_URL=<your Upstash REST URL>
+UPSTASH_REDIS_REST_TOKEN=<your Upstash REST token>
 ```
 
-`WEBSITE_SYNC_URL` is the API deployment base URL used by the bot for outbound synchronization. `BOT_API_URL` is the separate public base URL of the bot's own HTTP service, used by the API to push dashboard changes into the running bot.
+Configure the bot host:
+
+```env
+OPENUTILITY_API_URL=https://YOUR-PROJECT.vercel.app
+BOT_SYNC_SECRET=<same secret as the API>
+DISCORD_TOKEN=<your bot token>
+```
+
+`WEBSITE_SYNC_URL` is also accepted as a backwards-compatible name for `OPENUTILITY_API_URL`. The bot sends outbound HTTPS requests with `Authorization: Bearer <BOT_SYNC_SECRET>`; the API endpoint rejects requests without the matching secret. Remove the old `BOT_API_URL` variable from the API deployment because push synchronization is no longer used.
 
 ## 💾 Storage
 
