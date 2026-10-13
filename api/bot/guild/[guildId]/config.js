@@ -1,4 +1,5 @@
 const {requireBotSyncAuth,dbGet,dbSet,mergeConfig,configKey,automodKey,validGuildId}=require("../../../../lib/_lib");
+const syncStatusKey=id=>`guild:${id}:bot-sync-status`;
 
 function bodyObject(req){
   const body=req.body;
@@ -18,9 +19,25 @@ module.exports=async(req,res)=>{
   if(!requireBotSyncAuth(req,res))return;
   const id=String(req.query.guildId||"");
   if(!validGuildId(id))return res.status(400).json({error:"Invalid guild ID."});
-  if(!["GET","PUT"].includes(req.method))return res.status(405).json({error:"Method not allowed"});
+  if(!["GET","PUT","POST"].includes(req.method))return res.status(405).json({error:"Method not allowed"});
 
   try{
+    if(req.method==="POST"){
+      const body=bodyObject(req);
+      if(!body)return res.status(400).json({error:"Invalid bot acknowledgement."});
+      const status=String(body.status||"");
+      if(status!=="applied")return res.status(400).json({error:"Bot acknowledgement status must be applied."});
+      const checkedAt=new Date().toISOString();
+      const record={
+        guildId:id,
+        status:"applied",
+        checkedAt,
+        configUpdatedAt:typeof body.configUpdatedAt==="string"?body.configUpdatedAt.slice(0,80):null,
+        botVersion:typeof body.botVersion==="string"?body.botVersion.slice(0,40):null
+      };
+      await dbSet(syncStatusKey(id),record);
+      return res.json({ok:true,guildId:id,acknowledgedAt:checkedAt});
+    }
     const [storedConfig,storedAutomod]=await Promise.all([dbGet(configKey(id)),dbGet(automodKey(id))]);
     if(req.method==="GET"){
       return res.json({ok:true,guildId:id,config:mergeConfig(storedConfig),automod:cleanAutomod(storedAutomod),source:"website"});
