@@ -99,7 +99,7 @@ BOT_SYNC_SECRET=<same secret as the API>
 DISCORD_TOKEN=<your bot token>
 ```
 
-`WEBSITE_SYNC_URL` is also accepted as a backwards-compatible name for `OPENUTILITY_API_URL`. The bot sends outbound HTTPS requests with `Authorization: Bearer <BOT_SYNC_SECRET>`; the API endpoint rejects requests without the matching secret. Remove the old `BOT_API_URL` variable from the API deployment because push synchronization is no longer used.
+`WEBSITE_SYNC_URL` is also accepted as a backwards-compatible name for `OPENUTILITY_API_URL`. The bot sends outbound HTTPS requests with `Authorization: Bearer <BOT_SYNC_SECRET>`; the API endpoint rejects requests without the matching secret. Do not configure a push-style `BOT_API_URL` endpoint: synchronization uses outbound polling from the bot host.
 
 ## 💾 Storage
 
@@ -156,7 +156,7 @@ Configure these variables in the deployment provider (never commit real values):
 - `FRONTEND_URL=https://openutility.bot.nu` — exact dashboard origin, with no path
 - `SESSION_SECRET` — a long, randomly generated secret
 - `BOT_SYNC_SECRET` — a long, randomly generated secret shared with the bot
-- `BOT_API_URL` — public HTTPS base URL for the bot host's configuration-sync endpoint
+- `OPENUTILITY_API_URL` — on the bot host, set this to the deployed API base URL (for example `https://YOUR-PROJECT.vercel.app`); the bot polls outbound and does not need a public inbound endpoint
 - `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` — persistent storage
 
 The health endpoint checks storage reachability. Browser state-changing requests must include the session-bound `X-CSRF-Token` returned by `GET /api/csrf` and must originate from the configured frontend origin.
