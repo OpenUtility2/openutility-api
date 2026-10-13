@@ -3,7 +3,8 @@
   "rewrites": [
     { "source": "/api/me", "destination": "/api/health?route=me" },
     { "source": "/api/csrf", "destination": "/api/health?route=csrf" },
-    { "source": "/api/logout", "destination": "/api/health?route=logout" }
+    { "source": "/api/logout", "destination": "/api/health?route=logout" },
+    { "source": "/api/guilds/:guildId/diagnostics", "destination": "/api/health?route=diagnostics&guildId=:guildId" }
   ],
   "headers": [
     {
