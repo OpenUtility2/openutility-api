@@ -1,4 +1,4 @@
-const {requireBotSyncAuth,dbGet,dbSet,mergeConfig,configKey,automodKey,validGuildId}=require("../../../../lib/_lib");
+const {requireBotSyncAuth,dbGet,dbSet,dbSetConfigAndAutomod,mergeConfig,configKey,automodKey,validGuildId}=require("../../../../lib/_lib");
 const syncStatusKey=id=>`guild:${id}:bot-sync-status`;
 
 function bodyObject(req){
@@ -40,7 +40,8 @@ module.exports=async(req,res)=>{
     }
     const [storedConfig,storedAutomod]=await Promise.all([dbGet(configKey(id)),dbGet(automodKey(id))]);
     if(req.method==="GET"){
-      return res.json({ok:true,guildId:id,config:mergeConfig(storedConfig),automod:cleanAutomod(storedAutomod),source:"website"});
+      const fallbackAutomod=storedConfig&&typeof storedConfig==="object"&&!Array.isArray(storedConfig)?storedConfig.automod:null;
+      return res.json({ok:true,guildId:id,config:mergeConfig(storedConfig),automod:cleanAutomod(storedAutomod&&typeof storedAutomod==="object"&&!Array.isArray(storedAutomod)?storedAutomod:fallbackAutomod),source:"website"});
     }
 
     const body=bodyObject(req);
@@ -52,7 +53,7 @@ module.exports=async(req,res)=>{
     const incomingAutomod=Object.prototype.hasOwnProperty.call(body,"automod")?cleanAutomod(body.automod):cleanAutomod(next.automod);
     next.automod=cleanAutomod({...next.automod,...incomingAutomod});
 
-    await Promise.all([dbSet(configKey(id),next),dbSet(automodKey(id),next.automod)]);
+    await dbSetConfigAndAutomod(id,next,next.automod);
     return res.json({ok:true,guildId:id,config:next,automod:next.automod,source:"bot"});
   }catch(error){
     console.error("Bot sync error:",error);
