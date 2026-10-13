@@ -1,4 +1,4 @@
-const {cors,requireAuth,requireGuildAccess,dbGet,dbSet,loggingKey,mergeConfig,configKey,validGuildId}=require("../../../lib/_lib");
+const {cors,requireAuth,requireGuildAccess,dbGet,dbSetConfigAndLogging,loggingKey,mergeConfig,configKey,validGuildId}=require("../../../lib/_lib");
 
 module.exports=async(req,res)=>{
   cors(res);if(req.method==="OPTIONS")return res.status(204).end();
@@ -15,8 +15,7 @@ module.exports=async(req,res)=>{
     ["enabled","messageLogs","memberLogs","moderationLogs","commandLogs"].forEach(k=>{if(typeof b[k]==="boolean")next[k]=b[k]});
     ["messageChannelId","memberChannelId","moderationChannelId","commandChannelId"].forEach(k=>{if(b[k]===null||/^\d{17,20}$/.test(String(b[k]||"")))next[k]=b[k]||null});
     const nextConfig={...cfg,logging:next,updatedAt:new Date().toISOString()};
-    await dbSet(loggingKey(id),next);
-    await dbSet(configKey(id),nextConfig);
+    await dbSetConfigAndLogging(id,nextConfig,next);
     const runtimeSync={status:"queued",message:"Saved to API storage. The bot will fetch the latest configuration on its next polling cycle; this confirms storage, not that every feature handler is active."};
     return res.json({ok:true,guildId:id,logging:next,runtimeSync});
   }catch(e){console.error(e);return res.status(503).json({error:"Logging storage is unavailable."});}
