@@ -2,7 +2,7 @@ const crypto = require("crypto");
 const { cors } = require("../../lib/_lib");
 
 module.exports = (req, res) => {
-  cors(res);
+  cors(res, req);
 
   if (req.method === "OPTIONS") {
     return res.status(204).end();
