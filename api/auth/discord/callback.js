@@ -15,12 +15,12 @@ function parseCookies(req) {
 }
 
 module.exports = async (req, res) => {
-  cors(res);
+  cors(res, req);
   if (req.method === "OPTIONS") return res.status(204).end();
 
   const { code, state, error } = req.query || {};
-  const front = "https://openutility.bot.nu";
-  const dashboard = `${front}/dashboard/`;
+  const front = "https://feloony.github.io/workingonit";
+  const dashboard = `${front}/`;
 
   if (error) return res.redirect(`${front}/?auth=error`);
   if (!code || !state) return res.status(400).send("Invalid OAuth response.");
