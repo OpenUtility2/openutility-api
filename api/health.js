@@ -4,7 +4,7 @@ const syncStatusKey = id => `guild:${id}:bot-sync-status`;
 const STALE_AFTER_MS = 180_000;
 
 module.exports = async (req, res) => {
-  cors(res);
+  cors(res, req);
   if (req.method === "OPTIONS") return res.status(204).end();
 
   const route = String((req.query && req.query.route) || "health").toLowerCase();
