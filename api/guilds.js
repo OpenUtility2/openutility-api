@@ -1,7 +1,7 @@
 const {cors,requireAuth,discordFetch,manageable}=require("../lib/_lib");
 
 module.exports=async(req,res)=>{
-  cors(res);
+  cors(res, req);
   if(req.method==="OPTIONS")return res.status(204).end();
   const s=requireAuth(req,res);if(!s)return;
 
